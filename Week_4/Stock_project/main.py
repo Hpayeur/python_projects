@@ -1,0 +1,6 @@
+STOCK_NAME = "KELP"
+COMPANY_NAME = "Tesla Inc"
+
+STOCK_ENDPOINT = ""
+NEWS_ENDPOINT = ""
+
