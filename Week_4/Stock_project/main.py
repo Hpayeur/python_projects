@@ -1,6 +1,7 @@
 import os
 import requests
 from dotenv import load_dotenv
+from twilio.rest import Client
 
 #ENV
 load_dotenv()
@@ -13,6 +14,8 @@ NEWS_ENDPOINT = "https://newsapi.org/v2/everything"
 
 STOCK_API_KEY = os.getenv("STOCK_API_KEY")
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
+TWILIO_SID = os.getenv("TWILIO_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 
 #Get Yesterday's closing stock price
 stock_params = {
@@ -34,11 +37,16 @@ print(f"Here's the Day Before Yesterday Closing Price: {day_before_yesterday_clo
 
 #Find the positive difference between 1 and 2. e.g. 40 -20 = -20, but the positive difference is 20.
 difference = abs(float(yesterday_closing_price) - float(day_before_yesterday_closing_price))
-print(f"Here's the Difference: {difference}")
+up_down = None
+if difference > 0:
+    up_down = ""
+else:
+    up_down = "Down"
+
 
 #Work out the percentage difference in price between closing price yesterday and,
 # closing price the day before yesterday.
-diff_percent = (difference / float(yesterday_closing_price)) * 100
+diff_percent = round((difference / float(yesterday_closing_price)) * 100)
 print(f"Here's the Difference Percentage: %{diff_percent}")
 
 #Instead of printing ("Get News"), use the News API to get articles related to the COMPANY_NAME.
@@ -55,7 +63,18 @@ if diff_percent > 2:
 three_articles = articles[:3]
 print(f"Here's the News Articles: {three_articles}")
 
-#TODO 8. - Create a New list of the first 3 article's headline and description using list comprehension.
-"Headline: {article title}. \nBrief: {article description}"
+#Create a New list of the first 3 articles headline and description using list comprehension.
+formatted_articles = [(f"{STOCK_NAME}: {up_down}{diff_percent}%\n "
+                       f"headline: {article['title']}. \n"
+                       f"Brief: {article['description']}") for article in three_articles]
 
-#TODO 9. - Send each article as a separate message via Twilio.
+#Send each article as a separate message via Twilio.
+client = Client(TWILIO_SID, TWILIO_AUTH_TOKEN)
+
+#Send each article as a separate message via Twilio.
+for article in formatted_articles:
+    message = client.messages.create(
+        body=article,
+        from_="+Fake_Phone_Number from twilio",
+        to='+your phone number'
+    )
